@@ -6,19 +6,47 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/modern-normalize/0.2.0/modern-normalize.min.css"
+        integrity="sha512-sqIVMkf5f8XGYI/UZYGs7wODxlUeoj9JknataPfUwtvrSKWMHrMXGZ7Evb6nabFYJQG15vFFyALe6r0nWCD1Ug=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="index.js" defer></script>
     <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            min-height: 100vh;
+            background-color: antiquewhite;
+        }
+
         .node-head {
             border: 1px black solid;
             border-radius: 3px;
             padding: 16px;
             background: white;
+            max-width: 480px;
+            margin-bottom: 16px;
+        }
+
+        .vertex {
+            height: 9px;
+            width: 9px;
+            margin: 3px;
+            border-radius: 9001px;
+            display: inline-block;
+        }
+
+        .node-head button {
+            font-size: large;
+            cursor: pointer;
         }
     </style>
 </head>
 
 <body>
 
+    <nav>
+        <button onclick="play(event)">Play</button>
+        <button onclick="pause(event)">Pause</button>
+    </nav>
 
 
 </body>
