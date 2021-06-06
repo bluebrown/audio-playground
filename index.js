@@ -33,6 +33,7 @@
 
         const stolenAnalyserCallback = (ctx, analyser, head) => {
             const canvas = document.createElement('canvas')
+            canvas.width = 245;
             head.querySelector('.controls').append(canvas)
             analyser.fftSize = 2048;
             var bufferLength = analyser.frequencyBinCount;
@@ -66,9 +67,10 @@
         }
 
         const lfoOpts = {
-            constructor: { frequency: 0.8 },
+            constructor: { frequency: 1 },
             params: {
                 frequency: [-5.0, 5.0, 0.01],
+                detune: [-25, 25, 1],
             },
             select: [
                 {
@@ -160,8 +162,10 @@
         ioSection.classList = 'io'
         const leftDiv = document.createElement('div')
         const rightDiv = document.createElement('div')
-        ioSection.append(leftDiv)
+
+        // switched around. don't be mad at me
         ioSection.append(rightDiv)
+        ioSection.append(leftDiv)
 
         const heading2 = document.createElement('h2')
         heading2.textContent = 'Outputs'
