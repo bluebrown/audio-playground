@@ -44,14 +44,13 @@
             nodes[uid] = node
             appContext.append(head)
         }
-
         {
-            const [uid, node, head] = createDelay(ctx, dispatchSelection)
+            const [uid, node, head] = createAnalyzer(ctx, dispatchSelection)
             nodes[uid] = node
             appContext.append(head)
         }
         {
-            const [uid, node, head] = createAnalyzer(ctx, dispatchSelection)
+            const [uid, node, head] = createDelay(ctx, dispatchSelection)
             nodes[uid] = node
             appContext.append(head)
         }
@@ -60,13 +59,18 @@
             nodes[uid] = node
             appContext.append(head)
         }
-
+        {
+            const [uid, node, head] = createBiquadFilter(ctx, dispatchSelection)
+            nodes[uid] = node
+            appContext.append(head)
+        }
 
         const dest = ctx.destination
         const destHead = createHead(dest, 'Destination', [], dispatchSelection)
         appContext.append(destHead)
 
-
+        const bf = ctx.createDynamicsCompressor()
+        console.log(bf)
     }
 
 
@@ -358,10 +362,38 @@
         const controlSection = createControlSection()
         head.append(controlSection)
 
-        controlSection.append(rangeInput('pan', node.pan.value, 0, 1, 0.1, ({ target }) => {
+        controlSection.append(rangeInput('pan', node.pan.value, -1, 1, 0.1, ({ target }) => {
             saveSmoothValueChange(node.pan, target.value, ctx.currentTime)
-
         }))
+
+        return [head.id, node, head]
+    }
+
+
+    function createBiquadFilter(ctx, dispatchSelection) {
+        const node = ctx.createBiquadFilter()
+        const head = createHead(node, 'Biquad Filter', ['Q', 'detune', 'frequency', 'gain'], dispatchSelection)
+
+        const controlSection = createControlSection()
+        head.append(controlSection)
+
+
+        controlSection.append(rangeInput('Q', node.Q.value, -100, 100, 1, ({ target }) => {
+            saveSmoothValueChange(node.Q, target.value, ctx.currentTime)
+        }))
+
+        controlSection.append(rangeInput('detune', node.Q.value, 0, 100, 1, ({ target }) => {
+            saveSmoothValueChange(node.detune, target.value, ctx.currentTime)
+        }))
+
+        controlSection.append(rangeInput('frequency', node.frequency.value, 0, 24000, 1, ({ target }) => {
+            saveSmoothValueChange(node.frequency, target.value, ctx.currentTime)
+        }))
+
+        controlSection.append(rangeInput('gain', node.gain.value, -100, 100, 1, ({ target }) => {
+            saveSmoothValueChange(node.gain, target.value, ctx.currentTime)
+        }))
+
 
         return [head.id, node, head]
     }
