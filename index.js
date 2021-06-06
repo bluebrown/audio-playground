@@ -55,6 +55,11 @@
             nodes[uid] = node
             appContext.append(head)
         }
+        {
+            const [uid, node, head] = createStereoPanner(ctx, dispatchSelection)
+            nodes[uid] = node
+            appContext.append(head)
+        }
 
 
         const dest = ctx.destination
@@ -340,6 +345,21 @@
 
         controlSection.append(rangeInput('delay', node.delayTime.value, 0, 1, 0.1, ({ target }) => {
             saveSmoothValueChange(node.delayTime, target.value, ctx.currentTime)
+
+        }))
+
+        return [head.id, node, head]
+    }
+
+    function createStereoPanner(ctx, dispatchSelection) {
+        const node = ctx.createStereoPanner()
+        const head = createHead(node, 'Stereo Panning', ['pan'], dispatchSelection)
+
+        const controlSection = createControlSection()
+        head.append(controlSection)
+
+        controlSection.append(rangeInput('pan', node.pan.value, 0, 1, 0.1, ({ target }) => {
+            saveSmoothValueChange(node.pan, target.value, ctx.currentTime)
 
         }))
 
