@@ -64,13 +64,15 @@
             nodes[uid] = node
             appContext.append(head)
         }
+        {
+            const [uid, node, head] = createCompressor(ctx, dispatchSelection)
+            nodes[uid] = node
+            appContext.append(head)
+        }
 
         const dest = ctx.destination
         const destHead = createHead(dest, 'Destination', [], dispatchSelection)
         appContext.append(destHead)
-
-        const bf = ctx.createDynamicsCompressor()
-        console.log(bf)
     }
 
 
@@ -159,7 +161,10 @@
         heading4.textContent = 'Params'
         paramsSection.append(heading4)
         for (let i = 0; i < params.length; i++) {
-            const param = params[i]
+            let param = params[i]
+            if (typeof param !== 'string') {
+                param = param[0]
+            }
             const prBtn = document.createElement('button')
             prBtn.id = guid()
             prBtn.textContent = `${param}`
@@ -233,6 +238,29 @@
         }
     }
 
+    function createGenericNode(ctx, label, node, params, dispatchSelection) {
+        const head = createHead(node, label, params, dispatchSelection)
+        const controlSection = createControlSection()
+        head.append(controlSection)
+        for (let p of params) {
+            let min, max, step
+            if (typeof p === 'string') {
+                min = node[p].minValue
+                max = node[p].maxValue
+                step = 0.1
+            } else {
+                min = p[1]
+                max = p[2]
+                step = p[3]
+                p = p[0]
+            }
+            controlSection.append(rangeInput(p, node[p].value, min, max, step, ({ target }) => {
+                saveSmoothValueChange(node[p], target.value, ctx.currentTime)
+            }))
+        }
+        return [head.id, node, head]
+    }
+
     function createOscillator(ctx, dispatchSelection, lfo = false) {
         const osc = ctx.createOscillator()
         if (lfo) {
@@ -263,23 +291,6 @@
 
         return [oscHead.id, osc, oscHead]
     }
-
-
-    function createGain(ctx, dispatchSelection) {
-        const gain = ctx.createGain()
-        const gainHead = createHead(gain, 'Gain', ['gain'], dispatchSelection)
-
-        const controlSection = createControlSection()
-        gainHead.append(controlSection)
-
-        controlSection.append(rangeInput('gain', gain.gain.value, 0, 1, 0.1, ({ target }) => {
-            saveSmoothValueChange(gain.gain, target.value, ctx.currentTime)
-
-        }))
-
-        return [gainHead.id, gain, gainHead]
-    }
-
 
     function createAnalyzer(ctx, dispatchSelection) {
         const analyser = ctx.createAnalyser();
@@ -340,64 +351,54 @@
 
     }
 
+    function createGain(ctx, dispatchSelection) {
+        return createGenericNode(
+            ctx,
+            'Gain',
+            ctx.createGain(),
+            [['gain', 0, 1, 0.1]],
+            dispatchSelection
+        )
+    }
+
     function createDelay(ctx, dispatchSelection) {
-        const node = ctx.createDelay()
-        const head = createHead(node, 'Delay Time', ['delayTime'], dispatchSelection)
-
-        const controlSection = createControlSection()
-        head.append(controlSection)
-
-        controlSection.append(rangeInput('delay', node.delayTime.value, 0, 1, 0.1, ({ target }) => {
-            saveSmoothValueChange(node.delayTime, target.value, ctx.currentTime)
-
-        }))
-
-        return [head.id, node, head]
+        return createGenericNode(
+            ctx,
+            'Delay',
+            ctx.createDelay(),
+            ['delayTime'],
+            dispatchSelection
+        )
     }
 
     function createStereoPanner(ctx, dispatchSelection) {
-        const node = ctx.createStereoPanner()
-        const head = createHead(node, 'Stereo Panning', ['pan'], dispatchSelection)
-
-        const controlSection = createControlSection()
-        head.append(controlSection)
-
-        controlSection.append(rangeInput('pan', node.pan.value, -1, 1, 0.1, ({ target }) => {
-            saveSmoothValueChange(node.pan, target.value, ctx.currentTime)
-        }))
-
-        return [head.id, node, head]
+        return createGenericNode(
+            ctx,
+            'Stereo Pan',
+            ctx.createStereoPanner(),
+            ['pan'],
+            dispatchSelection
+        )
     }
-
 
     function createBiquadFilter(ctx, dispatchSelection) {
-        const node = ctx.createBiquadFilter()
-        const head = createHead(node, 'Biquad Filter', ['Q', 'detune', 'frequency', 'gain'], dispatchSelection)
-
-        const controlSection = createControlSection()
-        head.append(controlSection)
-
-
-        controlSection.append(rangeInput('Q', node.Q.value, -100, 100, 1, ({ target }) => {
-            saveSmoothValueChange(node.Q, target.value, ctx.currentTime)
-        }))
-
-        controlSection.append(rangeInput('detune', node.Q.value, 0, 100, 1, ({ target }) => {
-            saveSmoothValueChange(node.detune, target.value, ctx.currentTime)
-        }))
-
-        controlSection.append(rangeInput('frequency', node.frequency.value, 0, 24000, 1, ({ target }) => {
-            saveSmoothValueChange(node.frequency, target.value, ctx.currentTime)
-        }))
-
-        controlSection.append(rangeInput('gain', node.gain.value, -100, 100, 1, ({ target }) => {
-            saveSmoothValueChange(node.gain, target.value, ctx.currentTime)
-        }))
-
-
-        return [head.id, node, head]
+        return createGenericNode(
+            ctx,
+            'Biquad Filter',
+            ctx.createBiquadFilter(),
+            ['Q', 'detune', 'frequency', 'gain'],
+            dispatchSelection
+        )
     }
 
-
+    function createCompressor(ctx, dispatchSelection) {
+        return createGenericNode(
+            ctx,
+            'Compressor',
+            ctx.createDynamicsCompressor(),
+            ['attack', 'knee', 'ratio', 'release', 'threshold'],
+            dispatchSelection
+        )
+    }
 
 })().catch(console.warn)
