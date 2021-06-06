@@ -27,12 +27,19 @@ export function getAudioParams(node) {
 
 // mark connected nodes with random color badge
 // by finding th elements with the guid in the dom
-export function appendVertexBadge(ctx, colo, inGuid, outGuid) {
+export function appendVertexBadge(ctx, colo, inGuid, inIndex, outGuid, outIndex, vertexId) {
     const vertex = document.createElement('span')
     vertex.style.backgroundColor = colo
     vertex.classList = 'vertex'
     vertex.dataset.in = inGuid
     vertex.dataset.out = outGuid
+    vertex.dataset.vertexId = vertexId
+    if (inIndex) {
+        vertex.dataset.inIndex = inIndex
+    }
+    if (outIndex) {
+        vertex.dataset.ouIndex = outIndex
+    }
     ctx.append(vertex)
 }
 
@@ -47,12 +54,21 @@ export function connectSelected(outSelect, inSelect) {
         const colo = randomColor()
         const inEl = document.getElementById(inSelect.guid);
         const outEl = document.getElementById(outSelect.guid);
-        appendVertexBadge(inEl, colo, inEl.id, outEl.id)
-        appendVertexBadge(outEl, colo, inEl.id, outEl.id)
+        const vertexId = guid()
+        appendVertexBadge(inEl, colo, inEl.id, inSelect.index, outEl.id, outSelect.index, vertexId)
+        appendVertexBadge(outEl, colo, inEl.id, inSelect.index, outEl.id, outSelect.index, vertexId)
     }
     catch (err) {
         console.warn(err.message)
     }
+}
+
+// remove visual vertex from dom. it wont disconnect the nodes though
+export function removeVertex(outId, inId, vertexId) {
+    const outEl = document.getElementById(outId)
+    const inEl = document.getElementById(inId)
+    outEl.querySelector(`.vertex[data-vertex-id="${vertexId}"]`).remove()
+    inEl.querySelector(`.vertex[data-vertex-id="${vertexId}"]`).remove()
 }
 
 // create ui head for a given node and attack selection callback to controls
@@ -64,6 +80,23 @@ export function createHead(node, label = '', params = [], dispatchSelection = co
     const heading = document.createElement('h1')
     heading.textContent = label
     nodeHead.append(heading)
+    const deleteBtn = document.createElement('button')
+    heading.append(deleteBtn)
+    deleteBtn.textContent = 'x'
+    deleteBtn.classList = 'delete'
+    deleteBtn.onclick = () => {
+        if (typeof node.stop === 'function') {
+            node.stop()
+        }
+        node.disconnect()
+        nodeHead.querySelectorAll('.vertex').forEach((v) => {
+            const outEl = document.getElementById(v.dataset.in)
+            const toRemove = outEl.querySelector(`.vertex[data-vertex-id="${v.dataset.vertexId}"]`)
+            console.log(toRemove)
+            toRemove.remove()
+        })
+        nodeHead.remove()
+    }
 
     // input output section
     const ioSection = document.createElement('section')
@@ -334,7 +367,7 @@ export const biFilterOpts = {
 // - 'params' options to set param slider
 // - 'select' array of object with select inputs options
 export const nodeList = [
-    ['OscillatorNode', OscillatorNode, { select: lfoOpts.select }],
+    ['OscillatorNode', OscillatorNode, { select: lfoOpts.select, params: { frequency: [0, 1000, 1], detune: [-25, 25, 1] } }],
     ['LfoNode', OscillatorNode, lfoOpts],
     ['GainNode', GainNode, { params: { gain: [0, 2, 0.1] } }],
     ['StereoPannerNode', StereoPannerNode, {}],

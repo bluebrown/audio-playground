@@ -5,6 +5,7 @@ import {
     createHead,
     connectSelected,
     nodeList,
+    removeVertex,
 } from './lib.js'
 
 
@@ -32,23 +33,52 @@ function dispatchSelection(payload) {
         currentOutput = null
         return
     }
+
+    // check if nodes are already connected and if so disconnect
+
+    // if the current output has a vertex with input id of the payload guid
+    // then the connection already exists
+
+    let domQuery = `.vertex[data-in="${payload.guid}"]`
+    if (currentOutput.index) {
+        domQuery += `[data-out-index="${currentOutput.index}"]`
+    }
+    if (payload.index) {
+        domQuery += `[data-in-index="${payload.index}"]`
+    }
+
+    const existing = document.getElementById(currentOutput.guid).querySelector(domQuery)
+
+    if (existing) {
+        currentOutput.node.disconnect(payload.node)
+        removeVertex(currentOutput.guid, payload.guid, existing.dataset.vertexId)
+        currentOutput = null
+        return
+    }
+
+    // otherwise connect
     connectSelected(currentOutput, payload)
     currentOutput = null
 }
 
-// hold all nodes here with a key identical to the guid in the dom
-// this will prevent dereferencing and allows to know which dom element
-// corresponds to which node, if ever needed
-const nodes = {}
+
+const ns = document.getElementById('node-select')
+
 
 // generate all nodes in the list for testing
 for (const i in nodeList) {
-    const [uid, node, head] = createNodeFromList(ctx, i, dispatchSelection)
-    nodes[uid] = node
-    appContext.append(head)
+    const opt = document.createElement('option')
+    opt.value = i
+    opt.textContent = nodeList[i][0]
+    ns.append(opt)
 }
 
 // create audio destination
 const dest = ctx.destination
 const destHead = createHead(dest, 'Destination', [], dispatchSelection)
+destHead.querySelector('.delete').remove()
 appContext.append(destHead)
+
+window.addNode = () => {
+    appContext.insertBefore(createNodeFromList(ctx, parseInt(ns.value), dispatchSelection)[2], destHead)
+}

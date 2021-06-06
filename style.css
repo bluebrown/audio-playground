@@ -1,0 +1,71 @@
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    min-height: 100vh;
+    background-color: whitesmoke;
+}
+
+nav {
+    padding: 16px;
+    border-bottom: 1px gray solid;
+    background-color: aliceblue;
+}
+
+#app {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 24px;
+    padding-top: 16px;
+    justify-content: center;
+}
+
+.node-head {
+    border: 1px black solid;
+    border-radius: 3px;
+    padding: 16px;
+    background: white;
+    max-width: 280px;
+    margin-bottom: 16px;
+    flex: 1;
+    margin: 8px;
+}
+
+
+.node-head button {
+    cursor: pointer;
+}
+
+.node-head h1 {
+    font-size: larger;
+}
+
+.node-head h2 {
+    font-size: large;
+}
+
+.control-group {
+    display: flex;
+}
+
+.io {
+    display: inline-flex;
+    flex-wrap: wrap;
+}
+
+.io>div {
+    margin: 6px;
+}
+
+.display {
+    display: inline-block;
+    border: none;
+    min-width: 0;
+}
+
+.vertex {
+    height: 9px;
+    width: 9px;
+    margin: 3px;
+    border-radius: 9001px;
+    display: inline-block;
+}
+
