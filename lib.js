@@ -90,10 +90,9 @@ export function createHead(node, label = '', params = [], dispatchSelection = co
         }
         node.disconnect()
         nodeHead.querySelectorAll('.vertex').forEach((v) => {
-            const outEl = document.getElementById(v.dataset.in)
-            const toRemove = outEl.querySelector(`.vertex[data-vertex-id="${v.dataset.vertexId}"]`)
-            console.log(toRemove)
-            toRemove.remove()
+            // could squeeze some performance as half of 
+            // the vertices to remove will go with the node anyways
+            removeVertex(v.dataset.out, v.dataset.in, v.dataset.vertexId)
         })
         nodeHead.remove()
     }

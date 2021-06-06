@@ -69,3 +69,8 @@ nav {
     display: inline-block;
 }
 
+.delete {
+    float: right;
+    position: relative;
+    top: -15px;
+}

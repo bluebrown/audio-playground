@@ -49,6 +49,7 @@ function dispatchSelection(payload) {
 
     const existing = document.getElementById(currentOutput.guid).querySelector(domQuery)
 
+
     if (existing) {
         currentOutput.node.disconnect(payload.node)
         removeVertex(currentOutput.guid, payload.guid, existing.dataset.vertexId)
