@@ -1,7 +1,9 @@
 'use strict';
 
 (async () => {
+
     // main scope
+
     {
 
         const appContext = document.getElementById('app')
@@ -85,11 +87,27 @@
             select: [{ label: 'oversample', items: ['none', '2x', '4x'] }],
             callback(ctx, ws, head) {
                 head.querySelector('.controls').append(rangeInput('curve', 0, 0, 100, 1, ({ target }) => {
-                    console.log(target.value);
                     ws.curve = makeDistortionCurve(target.value, 4400)
-                    console.log(ws.curve);
                 }))
             }
+        }
+
+        const biFilterOpts = {
+            select: [
+                {
+                    label: 'type',
+                    items: [
+                        'lowpass',
+                        'highpass',
+                        'bandpass',
+                        'lowshelf',
+                        'highshelf',
+                        'peaking',
+                        'notch',
+                        'allpass'
+                    ]
+                }
+            ]
         }
 
         const nodeList = [
@@ -99,7 +117,7 @@
             ['StereoPannerNode', StereoPannerNode, {}],
             ['PannerNode', PannerNode, {}],
             ['DynamicsCompressorNode', DynamicsCompressorNode, {}],
-            ['BiquadFilterNode', BiquadFilterNode, {}],
+            ['BiquadFilterNode', BiquadFilterNode, biFilterOpts],
             ['WaveShaperNode', WaveShaperNode, waveShaperOpts],
             ['AnalyserNode', AnalyserNode, { callback: stolenAnalyserCallback }],
         ]
@@ -116,6 +134,9 @@
         appContext.append(destHead)
 
     }
+
+
+    // library code
 
     function guid() {
         const S4 = () => (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
