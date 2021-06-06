@@ -83,3 +83,30 @@ appContext.append(destHead)
 window.addNode = () => {
     appContext.insertBefore(createNodeFromList(ctx, parseInt(ns.value), dispatchSelection)[2], destHead)
 }
+
+
+// create some example nodes and connect them
+{
+    const oscHead = createNodeFromList(ctx, 0, dispatchSelection)[2]
+    appContext.insertBefore(oscHead, destHead)
+
+    const [guid, gainNode, gainHead] = createNodeFromList(ctx, 2, dispatchSelection)
+    appContext.insertBefore(gainHead, destHead)
+
+    const anaHead = createNodeFromList(ctx, 8, dispatchSelection)[2]
+    appContext.insertBefore(anaHead, destHead)
+
+    oscHead.querySelector('.outputs button').click()
+    gainHead.querySelector('.inputs button').click()
+
+    gainHead.querySelector('.outputs button').click()
+    anaHead.querySelector('.inputs button').click()
+
+    anaHead.querySelector('.outputs button').click()
+    destHead.querySelector('.inputs button').click()
+
+    gainHead.querySelector('input[name="gain"]').value = "0.1"
+    gainHead.querySelector('input.display').value = "0.1"
+    gainNode.gain.value = 0.1
+
+}
