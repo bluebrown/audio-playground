@@ -13,7 +13,10 @@
 
         let currentOutput = null
 
+        // a callback that is fired when a node connector is clicked.
+        // (the input, putout and params buttons on the ui cards)
         function dispatchSelection(payload) {
+            // self imposed rules to be less confusing to the user
             if (!currentOutput) {
                 if (payload.type != 'output') {
                     console.warn('must use output first')
@@ -23,7 +26,7 @@
                 return
             }
             if (payload.type == 'output') {
-                console.warn('must use input or param')
+                console.warn('must use input or param second')
                 currentOutput = null
                 return
             }
@@ -31,8 +34,13 @@
             currentOutput = null
         }
 
+        // hold all nodes here with a key identical to the guid in the dom
+        // this will prevent dereferencing and allows to know which dom element
+        // corresponds to which node, if ever needed
         const nodes = {}
 
+        // this was taken from the docs https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Advanced_techniques
+        // it us used to graph the signal in the analyzer node
         const stolenAnalyserCallback = (ctx, analyser, head) => {
             const canvas = document.createElement('canvas')
             canvas.width = 245;
@@ -87,7 +95,7 @@
             select: [{ label: 'oversample', items: ['none', '2x', '4x'] }],
             callback(ctx, ws, head) {
                 head.querySelector('.controls').append(rangeInput('curve', 0, 0, 100, 1, ({ target }) => {
-                    ws.curve = makeDistortionCurve(target.value, 4400)
+                    ws.curve = makeDistortionCurve(target.value)
                 }))
             }
         }
@@ -110,8 +118,16 @@
             ]
         }
 
+        // node list from which nodes with defaults settings and ui head can be generates
+        // the first items is the label on the ui card
+        // the second item is the node contractor that will be invoked
+        // the third item is an object of options
+        // it can contain a
+        // -  'constructor' options object
+        // - 'params' options to set param slider
+        // - 'select' array of object with select inputs options
         const nodeList = [
-            ['OscillatorNode', OscillatorNode, {}],
+            ['OscillatorNode', OscillatorNode, { select: lfoOpts.select }],
             ['LfoNode', OscillatorNode, lfoOpts],
             ['GainNode', GainNode, { params: { gain: [0, 2, 0.1] } }],
             ['StereoPannerNode', StereoPannerNode, {}],
@@ -122,13 +138,14 @@
             ['AnalyserNode', AnalyserNode, { callback: stolenAnalyserCallback }],
         ]
 
-
+        // generate all nodes in the list for testing
         for (const [label, Constructor, options] of nodeList) {
             const [uid, node, head] = createNode(label, ctx, Constructor, options, dispatchSelection)
             nodes[uid] = node
             appContext.append(head)
         }
 
+        // create audio destination
         const dest = ctx.destination
         const destHead = createHead(dest, 'Destination', [], dispatchSelection)
         appContext.append(destHead)
@@ -138,15 +155,19 @@
 
     // library code
 
+    // create random guid for element refs
     function guid() {
         const S4 = () => (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
         return (S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4());
     }
 
+    // create random color to show connected nodes
     function randomColor() {
         return '#' + Math.floor(Math.random() * 16777215).toString(16);
     }
 
+    // get audio params of a given node in order to 
+    // initialize the ui head with io and params slider
     function getAudioParams(node) {
         const params = []
         for (const propName in node) {
@@ -157,6 +178,8 @@
         return params
     }
 
+    // mark connected nodes with random color badge
+    // by finding th elements with the guid in the dom
     function appendVertexBadge(ctx, colo, inGuid, outGuid) {
         const vertex = document.createElement('span')
         vertex.style.backgroundColor = colo
@@ -166,6 +189,7 @@
         ctx.append(vertex)
     }
 
+    // try to connect the provided nodes and visualize in the dom
     function connectSelected(outSelect, inSelect) {
         try {
             if (inSelect.type == 'param') {
@@ -184,7 +208,9 @@
         }
     }
 
+    // create ui head for a given node and attack selection callback to controls
     function createHead(node, label = '', params = [], dispatchSelection = console.log) {
+        // create new article with and asign guid as id
         const nodeHead = document.createElement('article')
         nodeHead.id = guid()
         nodeHead.classList = 'node-head'
@@ -192,6 +218,7 @@
         heading.textContent = label
         nodeHead.append(heading)
 
+        // input output section
         const ioSection = document.createElement('section')
         nodeHead.append(ioSection)
         ioSection.classList = 'io'
@@ -226,6 +253,7 @@
             ipBtn.onclick = () => dispatchSelection({ node, guid: ipBtn.id, index: i, type: 'input' })
         }
 
+        // parameter section
         const paramsSection = document.createElement('section')
         paramsSection.classList = 'params'
         nodeHead.append(paramsSection)
@@ -235,9 +263,6 @@
         paramsSection.append(heading4)
         for (let i = 0; i < params.length; i++) {
             let param = params[i]
-            if (typeof param !== 'string') {
-                param = param[0]
-            }
             const prBtn = document.createElement('button')
             prBtn.id = guid()
             prBtn.textContent = `${param}`
@@ -248,7 +273,7 @@
         return nodeHead
     }
 
-
+    // create a new range input that is used for the node head controls
     function rangeInput(label, value = 0, min = 0, max = 100, step = 1, onchange = console.log) {
         const controlGroup = document.createElement('div')
         controlGroup.classList = 'control-group'
@@ -275,6 +300,7 @@
         return controlGroup
     }
 
+    // create a new select input that is used for the ui head controls
     function selectInput(label, options, onchange = console.log) {
         const controlGroup = document.createElement('div')
         controlGroup.classList = 'control-group'
@@ -294,6 +320,8 @@
         return controlGroup
     }
 
+    // create wrapper for individual control elements
+    // mainly useful for css purposes
     function createControlSection() {
         const controlSection = document.createElement('section')
         controlSection.classList = 'controls'
@@ -303,6 +331,7 @@
         return controlSection
     }
 
+    // try to ramp the value exponentially unless it is 0 then do it linear
     function saveSmoothValueChange(audioParam, value, time) {
         value = parseFloat(value)
         if (value !== 0) {
@@ -312,6 +341,7 @@
         }
     }
 
+    // create a new node and bind ui head head 
     function createNode(label, ctx, Constructor, options = {}, dispatchSelection = console.log) {
         // create new node by invoking the constructor
         const node = new Constructor(ctx, options.constructor || {})
@@ -356,6 +386,7 @@
         return [head.id, node, head]
     }
 
+    // sigmoid distortion from https://developer.mozilla.org/en-US/docs/Web/API/WaveShaperNode
     function makeDistortionCurve(amount = 20, n_samples = 256) {
         let curve = new Float32Array(n_samples);
         for (let i = 0; i < n_samples; ++i) {
