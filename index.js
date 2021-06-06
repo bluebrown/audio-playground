@@ -44,6 +44,11 @@
             nodes[uid] = node
             appContext.append(head)
         }
+        {
+            const [uid, node, head] = createAnalyzer(ctx, dispatchSelection)
+            nodes[uid] = node
+            appContext.append(head)
+        }
 
         const dest = ctx.destination
         const destHead = createHead(dest, 'Destination', [], dispatchSelection)
@@ -257,5 +262,66 @@
 
         return [gainHead.id, gain, gainHead]
     }
+
+
+    function createAnalyzer(ctx, dispatchSelection) {
+        const analyser = ctx.createAnalyser();
+        const head = createHead(analyser, 'Analyzer', [], dispatchSelection)
+        const controlSection = createControlSection()
+        head.append(controlSection)
+        const canvas = document.createElement('canvas')
+        head.append(canvas)
+
+        analyser.fftSize = 2048;
+
+        var bufferLength = analyser.frequencyBinCount;
+        var dataArray = new Uint8Array(bufferLength);
+        analyser.getByteTimeDomainData(dataArray);
+
+        var canvasCtx = canvas.getContext("2d");
+
+        // draw an oscilloscope of the current audio source
+
+        function draw() {
+
+            requestAnimationFrame(draw);
+
+            analyser.getByteTimeDomainData(dataArray);
+
+            canvasCtx.fillStyle = "rgb(200, 200, 200)";
+            canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+            canvasCtx.lineWidth = 2;
+            canvasCtx.strokeStyle = "rgb(0, 0, 0)";
+
+            canvasCtx.beginPath();
+
+            var sliceWidth = canvas.width * 1.0 / bufferLength;
+            var x = 0;
+
+            for (var i = 0; i < bufferLength; i++) {
+
+                var v = dataArray[i] / 128.0;
+                var y = v * canvas.height / 2;
+
+                if (i === 0) {
+                    canvasCtx.moveTo(x, y);
+                } else {
+                    canvasCtx.lineTo(x, y);
+                }
+
+                x += sliceWidth;
+            }
+
+            canvasCtx.lineTo(canvas.width, canvas.height / 2);
+            canvasCtx.stroke();
+        }
+
+        draw();
+
+        return [head.id, analyser, head]
+
+    }
+
 
 })().catch(console.warn)
