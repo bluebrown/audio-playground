@@ -9,7 +9,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/modern-normalize/0.2.0/modern-normalize.min.css"
         integrity="sha512-sqIVMkf5f8XGYI/UZYGs7wODxlUeoj9JknataPfUwtvrSKWMHrMXGZ7Evb6nabFYJQG15vFFyALe6r0nWCD1Ug=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <script src="index.js" defer type="module"></script>
+
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+    <script src="index.js" type="module"></script>
+    <script>
+        $(function () {
+            $(".node-head").draggable();
+        });
+    </script>
     <link rel="stylesheet" href="style.css">
 </head>
 
