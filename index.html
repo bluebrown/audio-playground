@@ -12,13 +12,8 @@
 
     <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="vendor/jquery.html-svg-connect.js"></script>
 
-    <script src="index.js" type="module"></script>
-    <script>
-        $(function () {
-            $(".node-head").draggable();
-        });
-    </script>
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -36,6 +31,15 @@
 
     <main id="app"></main>
 
+
+    <script src="index.js" type="module"></script>
+    <script>
+        $(() => $(".node-head").draggable());
+
+        document.querySelector('#app')
+            .addEventListener('nodesconnected', console.log, false)
+
+    </script>
 </body>
 
 </html>

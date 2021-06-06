@@ -57,6 +57,7 @@ export function connectSelected(outSelect, inSelect) {
         const vertexId = guid()
         appendVertexBadge(inEl, colo, inEl.id, inSelect.index, outEl.id, outSelect.index, vertexId)
         appendVertexBadge(outEl, colo, inEl.id, inSelect.index, outEl.id, outSelect.index, vertexId)
+        outEl.dispatchEvent(new CustomEvent('nodesconnected', { bubbles: true, detail: [outEl.id, inEl.id] }))
     }
     catch (err) {
         console.warn(err.message)
@@ -73,7 +74,7 @@ export function removeVertex(outId, inId, vertexId) {
 
 // create ui head for a given node and attack selection callback to controls
 export function createHead(node, label = '', params = [], dispatchSelection = console.log) {
-    // create new article with and asign guid as id
+    // create new article with and assign guid as id
     const nodeHead = document.createElement('article')
     nodeHead.id = guid()
     nodeHead.classList = 'node-head'
