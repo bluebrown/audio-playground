@@ -30,19 +30,20 @@
         const nodes = {}
 
         {
-            const [uid, osc, oscHead] = createOscillator(ctx, dispatchSelection)
-            nodes[uid] = osc
-            appContext.append(oscHead)
+            const [uid, node, head] = createOscillator(ctx, dispatchSelection)
+            nodes[uid] = node
+            appContext.append(head)
         }
         {
-            const [uid, osc, oscHead] = createOscillator(ctx, dispatchSelection)
-            nodes[uid] = osc
-            appContext.append(oscHead)
+            const [uid, node, head] = createOscillator(ctx, dispatchSelection)
+            nodes[uid] = node
+            appContext.append(head)
         }
-        const gain = ctx.createGain()
-        const gainHead = createHead(gain, 'Gain', ['gain'], dispatchSelection)
-        nodes[gainHead.id] = gain
-        appContext.append(gainHead)
+        {
+            const [uid, node, head] = createGain(ctx, dispatchSelection)
+            nodes[uid] = node
+            appContext.append(head)
+        }
 
         const dest = ctx.destination
         const destHead = createHead(dest, 'Destination', [], dispatchSelection)
@@ -147,6 +148,7 @@
         return nodeHead
     }
 
+
     function rangeInput(label, value = 0, min = 0, max = 100, step = 1, onchange = console.log) {
         const controlGroup = document.createElement('div')
         controlGroup.classList = 'control-group'
@@ -173,27 +175,44 @@
         return controlGroup
     }
 
+    function selectInput(label, options, onchange = console.log) {
+        const controlGroup = document.createElement('div')
+        controlGroup.classList = 'control-group'
+        const inputLabel = document.createElement('label')
+        controlGroup.append(inputLabel)
+        inputLabel.for = label
+        inputLabel.textContent = label
+        const input = document.createElement('select')
+        for (const type of options) {
+            const opt = document.createElement('option')
+            opt.textContent = type
+            opt.value = type
+            input.append(opt)
+        }
+        input.onchange = onchange
+    }
+
+    function createControlSection() {
+        const controlSection = document.createElement('section')
+        controlSection.classList = 'controls'
+        const ctrlHeader = document.createElement('h2')
+        ctrlHeader.textContent = 'Controls'
+        controlSection.append(ctrlHeader)
+        return controlSection
+    }
+
     function createOscillator(ctx, dispatchSelection) {
         const osc = ctx.createOscillator()
         osc.start()
         const oscHead = createHead(osc, 'Oscillator', ['frequency', 'detune'], dispatchSelection)
-        const controlSection = document.createElement('section')
-        controlSection.classList = 'controls'
+
+        const controlSection = createControlSection()
         oscHead.append(controlSection)
-        const ctrlHeader = document.createElement('h2')
-        ctrlHeader.textContent = 'Controls'
-        controlSection.append(ctrlHeader)
-        const typeSelect = document.createElement('select')
-        controlSection.append(typeSelect)
-        for (const type of ['sine', 'square', 'sawtooth', 'triangle']) {
-            const opt = document.createElement('option')
-            opt.textContent = type
-            opt.value = type
-            typeSelect.append(opt)
-        }
-        typeSelect.onchange = () => {
+
+        controlSection.append(selectInput('type', ['sine', 'square', 'sawtooth', 'triangle'], () => {
             osc.type = typeSelect.value
-        }
+        }))
+
         controlSection.append(rangeInput('frequency', osc.frequency.value, 60, 2000, 0.1, ({ target }) => {
             const value = parseFloat(target.value)
             osc.frequency.exponentialRampToValueAtTime(value, ctx.currentTime)
@@ -209,6 +228,26 @@
         }))
 
         return [oscHead.id, osc, oscHead]
+    }
+
+
+    function createGain(ctx, dispatchSelection) {
+        const gain = ctx.createGain()
+        const gainHead = createHead(gain, 'Gain', ['gain'], dispatchSelection)
+
+        const controlSection = createControlSection()
+        gainHead.append(controlSection)
+
+        controlSection.append(rangeInput('gain', gain.gain.value, 0, 1, 0.1, ({ target }) => {
+            const value = parseFloat(target.value)
+            if (value !== 0) {
+                gain.gain.exponentialRampToValueAtTime(value, ctx.currentTime)
+            } else {
+                gain.gain.linearRampToValueAtTime(value, ctx.currentTime)
+            }
+        }))
+
+        return [gainHead.id, gain, gainHead]
     }
 
 })().catch(console.warn)
