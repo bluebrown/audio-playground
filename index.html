@@ -38,6 +38,33 @@
             font-size: large;
             cursor: pointer;
         }
+
+        .node-head h1 {
+            font-size: larger;
+        }
+
+        .node-head h2 {
+            font-size: large;
+        }
+
+        #app {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        #app article.node-head {
+            flex: 1;
+        }
+
+        .control-group {
+            display: flex;
+        }
+
+        .display {
+            display: inline-block;
+            border: none;
+            min-width: 0;
+        }
     </style>
 </head>
 
@@ -48,6 +75,7 @@
         <button onclick="pause(event)">Pause</button>
     </nav>
 
+    <main id="app"></main>
 
 </body>
 

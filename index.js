@@ -2,6 +2,7 @@
 
 (async () => {
     { // main scope
+        const appContext = document.getElementById('app')
         const ctx = new AudioContext()
         window.play = () => ctx.resume()
         window.pause = () => ctx.suspend()
@@ -28,20 +29,24 @@
 
         const nodes = {}
 
-        const osc = ctx.createOscillator()
-        osc.start()
-        const oscHead = createHead(osc, 'Oscillator', ['frequency', 'detune'], dispatchSelection)
-        nodes[oscHead.id] = osc
-        document.body.append(oscHead)
-
+        {
+            const [uid, osc, oscHead] = createOscillator(ctx, dispatchSelection)
+            nodes[uid] = osc
+            appContext.append(oscHead)
+        }
+        {
+            const [uid, osc, oscHead] = createOscillator(ctx, dispatchSelection)
+            nodes[uid] = osc
+            appContext.append(oscHead)
+        }
         const gain = ctx.createGain()
         const gainHead = createHead(gain, 'Gain', ['gain'], dispatchSelection)
         nodes[gainHead.id] = gain
-        document.body.append(gainHead)
+        appContext.append(gainHead)
 
         const dest = ctx.destination
         const destHead = createHead(dest, 'Destination', [], dispatchSelection)
-        document.body.append(destHead)
+        appContext.append(destHead)
 
     }
 
@@ -66,7 +71,12 @@
 
     function connectSelected(outSelect, inSelect) {
         try {
-            outSelect.node.connect(inSelect.node, outSelect.index, inSelect.index)
+            console.log(inSelect.node, outSelect.index, inSelect.index)
+            if (inSelect.type == 'param') {
+                outSelect.node.connect(inSelect.node)
+            } else {
+                outSelect.node.connect(inSelect.node, outSelect.index, inSelect.index)
+            }
             const colo = randomColor()
             const inEl = document.getElementById(inSelect.guid);
             const outEl = document.getElementById(outSelect.guid);
@@ -88,6 +98,7 @@
 
         const ioSection = document.createElement('section')
         nodeHead.append(ioSection)
+        ioSection.classList = 'io'
         const leftDiv = document.createElement('div')
         const rightDiv = document.createElement('div')
         ioSection.append(leftDiv)
@@ -96,6 +107,7 @@
         const heading2 = document.createElement('h2')
         heading2.textContent = 'Outputs'
         leftDiv.append(heading2)
+        leftDiv.classList = 'outputs'
         for (let i = 0; i < node.numberOfOutputs; i++) {
             const opBtn = document.createElement('button')
             opBtn.id = guid()
@@ -107,6 +119,7 @@
         const heading3 = document.createElement('h2')
         heading3.textContent = 'Inputs'
         rightDiv.append(heading3)
+        rightDiv.classList = 'inputs'
         for (let i = 0; i < node.numberOfInputs; i++) {
             const ipBtn = document.createElement('button')
             ipBtn.id = guid()
@@ -116,6 +129,7 @@
         }
 
         const paramsSection = document.createElement('section')
+        paramsSection.classList = 'params'
         nodeHead.append(paramsSection)
 
         const heading4 = document.createElement('h2')
@@ -131,6 +145,70 @@
         }
 
         return nodeHead
+    }
+
+    function rangeInput(label, value = 0, min = 0, max = 100, step = 1, onchange = console.log) {
+        const controlGroup = document.createElement('div')
+        controlGroup.classList = 'control-group'
+        const inputLabel = document.createElement('label')
+        controlGroup.append(inputLabel)
+        inputLabel.for = label
+        inputLabel.textContent = label
+        const input = document.createElement('input')
+        controlGroup.append(input)
+        const valueDisplay = document.createElement('input')
+        valueDisplay.classList = 'display'
+        valueDisplay.value = value
+        controlGroup.append(valueDisplay)
+        input.name = label
+        input.type = 'range'
+        input.min = min
+        input.max = max
+        input.step = step
+        input.value = value
+        input.onchange = (event) => {
+            valueDisplay.value = event.target.value
+            onchange(event)
+        }
+        return controlGroup
+    }
+
+    function createOscillator(ctx, dispatchSelection) {
+        const osc = ctx.createOscillator()
+        osc.start()
+        const oscHead = createHead(osc, 'Oscillator', ['frequency', 'detune'], dispatchSelection)
+        const controlSection = document.createElement('section')
+        controlSection.classList = 'controls'
+        oscHead.append(controlSection)
+        const ctrlHeader = document.createElement('h2')
+        ctrlHeader.textContent = 'Controls'
+        controlSection.append(ctrlHeader)
+        const typeSelect = document.createElement('select')
+        controlSection.append(typeSelect)
+        for (const type of ['sine', 'square', 'sawtooth', 'triangle']) {
+            const opt = document.createElement('option')
+            opt.textContent = type
+            opt.value = type
+            typeSelect.append(opt)
+        }
+        typeSelect.onchange = () => {
+            osc.type = typeSelect.value
+        }
+        controlSection.append(rangeInput('frequency', osc.frequency.value, 60, 2000, 0.1, ({ target }) => {
+            const value = parseFloat(target.value)
+            osc.frequency.exponentialRampToValueAtTime(value, ctx.currentTime)
+        }))
+
+        controlSection.append(rangeInput('detune', osc.detune.value, -25, 25, 1, ({ target }) => {
+            const value = parseFloat(target.value)
+            if (value !== 0) {
+                osc.detune.exponentialRampToValueAtTime(value, ctx.currentTime)
+            } else {
+                osc.detune.linearRampToValueAtTime(value, ctx.currentTime)
+            }
+        }))
+
+        return [oscHead.id, osc, oscHead]
     }
 
 })().catch(console.warn)
