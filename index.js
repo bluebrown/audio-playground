@@ -80,16 +80,30 @@
             ]
         }
 
+        // needs more specialized controls
+        const waveShaperOpts = {
+            select: [{ label: 'oversample', items: ['none', '2x', '4x'] }],
+            callback(ctx, ws, head) {
+                head.querySelector('.controls').append(rangeInput('curve', 0, 0, 100, 1, ({ target }) => {
+                    console.log(target.value);
+                    ws.curve = makeDistortionCurve(target.value, 4400)
+                    console.log(ws.curve);
+                }))
+            }
+        }
+
         const nodeList = [
             ['OscillatorNode', OscillatorNode, {}],
             ['LfoNode', OscillatorNode, lfoOpts],
-            ['GainNode', GainNode, {}],
+            ['GainNode', GainNode, { params: { gain: [0, 2, 0.1] } }],
             ['StereoPannerNode', StereoPannerNode, {}],
             ['PannerNode', PannerNode, {}],
             ['DynamicsCompressorNode', DynamicsCompressorNode, {}],
             ['BiquadFilterNode', BiquadFilterNode, {}],
+            ['WaveShaperNode', WaveShaperNode, waveShaperOpts],
             ['AnalyserNode', AnalyserNode, { callback: stolenAnalyserCallback }],
         ]
+
 
         for (const [label, Constructor, options] of nodeList) {
             const [uid, node, head] = createNode(label, ctx, Constructor, options, dispatchSelection)
@@ -302,7 +316,7 @@
             const pOpts = options.params && options.params[p]
             const min = pOpts ? pOpts[0] : ap.minValue
             const max = pOpts ? pOpts[1] : ap.maxValue
-            const step = pOpts ? pOpts[3] : 0.1
+            const step = pOpts ? pOpts[2] : 0.1
             controlSection.append(rangeInput(p, ap.value, min, max, step, ({ target }) => {
                 saveSmoothValueChange(node[p], target.value, ctx.currentTime)
             }))
@@ -320,5 +334,15 @@
         // return the soup
         return [head.id, node, head]
     }
+
+    function makeDistortionCurve(amount = 20, n_samples = 256) {
+        let curve = new Float32Array(n_samples);
+        for (let i = 0; i < n_samples; ++i) {
+            let x = i * 2 / n_samples - 1;
+            curve[i] = (Math.PI + amount) * x / (Math.PI + amount * Math.abs(x));
+        }
+        return curve;
+    }
+
 
 })().catch(console.warn)
