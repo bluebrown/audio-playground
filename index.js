@@ -44,15 +44,23 @@
             nodes[uid] = node
             appContext.append(head)
         }
+
+        {
+            const [uid, node, head] = createDelay(ctx, dispatchSelection)
+            nodes[uid] = node
+            appContext.append(head)
+        }
         {
             const [uid, node, head] = createAnalyzer(ctx, dispatchSelection)
             nodes[uid] = node
             appContext.append(head)
         }
 
+
         const dest = ctx.destination
         const destHead = createHead(dest, 'Destination', [], dispatchSelection)
         appContext.append(destHead)
+
 
     }
 
@@ -322,6 +330,22 @@
         return [head.id, analyser, head]
 
     }
+
+    function createDelay(ctx, dispatchSelection) {
+        const node = ctx.createDelay()
+        const head = createHead(node, 'Delay Time', ['delayTime'], dispatchSelection)
+
+        const controlSection = createControlSection()
+        head.append(controlSection)
+
+        controlSection.append(rangeInput('delay', node.delayTime.value, 0, 1, 0.1, ({ target }) => {
+            saveSmoothValueChange(node.delayTime, target.value, ctx.currentTime)
+
+        }))
+
+        return [head.id, node, head]
+    }
+
 
 
 })().catch(console.warn)
