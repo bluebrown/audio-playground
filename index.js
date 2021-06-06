@@ -35,7 +35,7 @@
             appContext.append(head)
         }
         {
-            const [uid, node, head] = createOscillator(ctx, dispatchSelection)
+            const [uid, node, head] = createOscillator(ctx, dispatchSelection, true)
             nodes[uid] = node
             appContext.append(head)
         }
@@ -112,7 +112,7 @@
         for (let i = 0; i < node.numberOfOutputs; i++) {
             const opBtn = document.createElement('button')
             opBtn.id = guid()
-            opBtn.textContent = `op ${i}`
+            opBtn.textContent = `${i}`
             leftDiv.append(opBtn)
             opBtn.onclick = () => dispatchSelection({ node, guid: opBtn.id, index: i, type: 'output' })
         }
@@ -124,7 +124,7 @@
         for (let i = 0; i < node.numberOfInputs; i++) {
             const ipBtn = document.createElement('button')
             ipBtn.id = guid()
-            ipBtn.textContent = `ip ${i}`
+            ipBtn.textContent = `${i}`
             rightDiv.append(ipBtn)
             ipBtn.onclick = () => dispatchSelection({ node, guid: ipBtn.id, index: i, type: 'input' })
         }
@@ -140,7 +140,7 @@
             const param = params[i]
             const prBtn = document.createElement('button')
             prBtn.id = guid()
-            prBtn.textContent = `pr ${param}`
+            prBtn.textContent = `${param}`
             paramsSection.append(prBtn)
             prBtn.onclick = () => dispatchSelection({ node: node[param], guid: prBtn.id, type: 'param' })
         }
@@ -190,6 +190,7 @@
             input.append(opt)
         }
         input.onchange = onchange
+        return input
     }
 
     function createControlSection() {
@@ -201,30 +202,41 @@
         return controlSection
     }
 
-    function createOscillator(ctx, dispatchSelection) {
+    function saveSmoothValueChange(audioParam, value, time) {
+        value = parseFloat(value)
+        if (value !== 0) {
+            audioParam.exponentialRampToValueAtTime(value, time)
+        } else {
+            audioParam.linearRampToValueAtTime(value, time)
+        }
+    }
+
+    function createOscillator(ctx, dispatchSelection, lfo = false) {
         const osc = ctx.createOscillator()
+        if (lfo) {
+            osc.frequency.value = 0.1
+        }
         osc.start()
-        const oscHead = createHead(osc, 'Oscillator', ['frequency', 'detune'], dispatchSelection)
+        const oscHead = createHead(osc, lfo ? 'LFO' : 'Oscillator', ['frequency', 'detune'], dispatchSelection)
 
         const controlSection = createControlSection()
         oscHead.append(controlSection)
 
-        controlSection.append(selectInput('type', ['sine', 'square', 'sawtooth', 'triangle'], () => {
-            osc.type = typeSelect.value
+        controlSection.append(selectInput('type', ['sine', 'square', 'sawtooth', 'triangle'], ({ target }) => {
+            osc.type = target.value
         }))
 
-        controlSection.append(rangeInput('frequency', osc.frequency.value, 60, 2000, 0.1, ({ target }) => {
-            const value = parseFloat(target.value)
-            osc.frequency.exponentialRampToValueAtTime(value, ctx.currentTime)
+        const min = lfo ? -10 : 60
+        const max = lfo ? 10 : 2200
+        const step = lfo ? 0.01 : 0.1
+
+        controlSection.append(rangeInput('frequency', osc.frequency.value, min, max, step, ({ target }) => {
+            saveSmoothValueChange(osc.frequency, target.value, ctx.currentTime)
+
         }))
 
         controlSection.append(rangeInput('detune', osc.detune.value, -25, 25, 1, ({ target }) => {
-            const value = parseFloat(target.value)
-            if (value !== 0) {
-                osc.detune.exponentialRampToValueAtTime(value, ctx.currentTime)
-            } else {
-                osc.detune.linearRampToValueAtTime(value, ctx.currentTime)
-            }
+            saveSmoothValueChange(osc.detune, target.value, ctx.currentTime)
         }))
 
         return [oscHead.id, osc, oscHead]
@@ -239,12 +251,8 @@
         gainHead.append(controlSection)
 
         controlSection.append(rangeInput('gain', gain.gain.value, 0, 1, 0.1, ({ target }) => {
-            const value = parseFloat(target.value)
-            if (value !== 0) {
-                gain.gain.exponentialRampToValueAtTime(value, ctx.currentTime)
-            } else {
-                gain.gain.linearRampToValueAtTime(value, ctx.currentTime)
-            }
+            saveSmoothValueChange(gain.gain, target.value, ctx.currentTime)
+
         }))
 
         return [gainHead.id, gain, gainHead]
