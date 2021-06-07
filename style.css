@@ -93,3 +93,23 @@ nav {
 input {
     cursor: pointer;
 }
+
+#messages {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+}
+
+.msg {
+    padding: 24px;
+    font-size: larger;
+    border-radius: 3px;
+    margin: 6px;
+}
+
+.msg.warn {
+    background-color: rgba(255, 166, 0, 0.712);
+    color: rgb(114, 28, 2);
+    font-weight: bold;
+    border-color: rgb(114, 28, 2);;
+}

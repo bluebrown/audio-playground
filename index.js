@@ -17,6 +17,15 @@ window.pause = () => ctx.suspend()
 
 let currentOutput = null
 
+function message(msg, type = 'warn') {
+    console.warn(msg)
+    const msgEl = document.createElement('article')
+    msgEl.classList = 'msg ' + type
+    msgEl.textContent = msg
+    document.getElementById('messages').prepend(msgEl)
+    setTimeout(() => msgEl.remove(), 3000)
+}
+
 // event handler that is fired when a node connector is clicked.
 // (the input, putout and params buttons on the ui cards)
 appContext.addEventListener('audio:select', function ({ detail }) {
@@ -24,14 +33,14 @@ appContext.addEventListener('audio:select', function ({ detail }) {
     // self imposed rules to be less confusing to the user
     if (!currentOutput) {
         if (payload.type != 'output') {
-            console.warn('must use output first')
+            message('must use output first')
             return
         }
         currentOutput = payload
         return
     }
     if (payload.type == 'output') {
-        console.warn('must use input or param second')
+        message('must use input or param second')
         currentOutput = null
         return
     }
@@ -66,33 +75,5 @@ destHead.querySelector('.delete').remove()
 appContext.append(destHead)
 
 window.addNode = () => {
-    appContext.insertBefore(createNodeFromList(ctx, parseInt(ns.value))[2], destHead)
+    appContext.append(createNodeFromList(ctx, parseInt(ns.value))[2])
 }
-
-/*
-// create some example nodes and connect them
-{
-    const oscHead = createNodeFromList(ctx, 0)[2]
-    appContext.insertBefore(oscHead, destHead)
-
-    const [guid, gainNode, gainHead] = createNodeFromList(ctx, 2)
-    appContext.insertBefore(gainHead, destHead)
-
-    const anaHead = createNodeFromList(ctx, 8,)[2]
-    appContext.insertBefore(anaHead, destHead)
-
-    oscHead.querySelector('.outputs button').click()
-    gainHead.querySelector('.inputs button').click()
-
-    gainHead.querySelector('.outputs button').click()
-    anaHead.querySelector('.inputs button').click()
-
-    anaHead.querySelector('.outputs button').click()
-    destHead.querySelector('.inputs button').click()
-
-    gainHead.querySelector('input[name="gain"]').value = "0.1"
-    gainHead.querySelector('input.display').value = "0.1"
-    gainNode.gain.value = 0.1
-
-}
-*/
