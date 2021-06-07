@@ -394,6 +394,9 @@ export const biFilterOpts = {
     ]
 }
 
+
+// this list is work in progress, many components have missing functionality on the ui
+
 // node list from which nodes with defaults settings and ui head can be generates
 // the first items is the label on the ui card
 // the second item is the node contractor that will be invoked
@@ -403,15 +406,29 @@ export const biFilterOpts = {
 // - 'params' options to set param slider
 // - 'select' array of object with select inputs options
 export const nodeList = [
-    ['OscillatorNode', OscillatorNode, { select: lfoOpts.select, params: { frequency: [0, 1000, 1], detune: [-25, 25, 1] } }],
-    ['LfoNode', OscillatorNode, lfoOpts],
-    ['GainNode', GainNode, { params: { gain: [0, 2, 0.1] } }],
-    ['StereoPannerNode', StereoPannerNode, {}],
-    ['PannerNode', PannerNode, {}],
-    ['DynamicsCompressorNode', DynamicsCompressorNode, {}],
-    ['BiquadFilterNode', BiquadFilterNode, biFilterOpts],
-    ['WaveShaperNode', WaveShaperNode, waveShaperOpts],
+    // sources not implemented yet
+    // ['AudioBufferSourceNode', AudioBufferSourceNode, {}], // works
+    // ['ConstantSourceNode', ConstantSourceNode, {}], // works
+    // ['MediaElementAudioSourceNode', MediaElementAudioSourceNode, {}], required member mediaElement
+    // ['MediaStreamAudioSourceNode', MediaStreamAudioSourceNode, {}], required member mediaStream
+    // destinations
+    // ['MediaStreamAudioDestinationNode', MediaStreamAudioDestinationNode, {}], // works
+    // components
     ['AnalyserNode', AnalyserNode, { callback: stolenAnalyserCallback }],
+    ['BiquadFilterNode', BiquadFilterNode, biFilterOpts],
+    ['ChannelMergerNode', ChannelMergerNode, {}],
+    ['ChannelSplitterNode', ChannelSplitterNode, {}],
+    // ['ConvolverNode', ConvolverNode, {}], // needs a buffer
+    ['DelayNode', DelayNode, {}],
+    ['DynamicsCompressorNode', DynamicsCompressorNode, {}],
+    ['GainNode', GainNode, { params: { gain: [0, 2, 0.1] } }],
+    // ['IIRFilterNode', IIRFilterNode, {}], //  Failed to construct 'IIRFilterNode': required member feedback is undefined.
+    ['OscillatorNode', OscillatorNode, { select: lfoOpts.select, params: { frequency: [0, 1000, 1], detune: [-25, 25, 1] } }],
+    ['LfoNode', OscillatorNode, lfoOpts], // custom
+    ['PannerNode', PannerNode, {}],
+    // ['PeriodicWave', PeriodicWave, {}], needs buffer
+    ['StereoPannerNode', StereoPannerNode, {}],
+    ['WaveShaperNode', WaveShaperNode, waveShaperOpts],
 ]
 
 // create a node from the list by index
@@ -419,3 +436,17 @@ export function createNodeFromList(ctx, index = 0) {
     const [label, constructor, options] = nodeList[index]
     return createNode(label, ctx, constructor, options)
 }
+
+
+
+/*
+panner.panningModel = 'HRTF';
+panner.distanceModel = 'inverse';
+panner.refDistance = 1;
+panner.maxDistance = 10000;
+panner.rolloffFactor = 1;
+panner.coneInnerAngle = 360;
+panner.coneOuterAngle = 0;
+panner.coneOuterGain = 0;
+
+*/

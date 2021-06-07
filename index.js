@@ -69,6 +69,7 @@ window.addNode = () => {
     appContext.insertBefore(createNodeFromList(ctx, parseInt(ns.value))[2], destHead)
 }
 
+/*
 // create some example nodes and connect them
 {
     const oscHead = createNodeFromList(ctx, 0)[2]
@@ -94,3 +95,4 @@ window.addNode = () => {
     gainNode.gain.value = 0.1
 
 }
+*/
