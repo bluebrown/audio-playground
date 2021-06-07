@@ -57,11 +57,42 @@ export function connectSelected(outSelect, inSelect) {
         const vertexId = guid()
         appendVertexBadge(inEl, colo, inEl.id, inSelect.index, outEl.id, outSelect.index, vertexId)
         appendVertexBadge(outEl, colo, inEl.id, inSelect.index, outEl.id, outSelect.index, vertexId)
-        outEl.dispatchEvent(new CustomEvent('audio:connect', { bubbles: true, detail: [outEl.id, inEl.id] }))
+        outEl.dispatchEvent(new CustomEvent('audio:connected', { bubbles: true, detail: [outEl.id, inEl.id] }))
     }
     catch (err) {
         console.warn(err.message)
     }
+}
+
+// disconnect nodes from payload object. Optionally use existing param to remove
+// the existing vertex
+export function disconnectNodes(currentOutput, payload, existing = null) {
+    if (payload.type !== 'param') {
+        currentOutput.node.disconnect(payload.node, currentOutput.index, payload.index)
+    }
+    else {
+        currentOutput.node.disconnect(payload.node)
+    }
+    existing && removeVertex(currentOutput.guid, payload.guid, existing.dataset.vertexId)
+}
+
+// if the out element has a vertex with in data of guid as the in data element
+// and the indexes are the same the the nodes are already connected
+export function getExistingVertex(outData, inData) {
+    // in node id
+    let domQuery = `.vertex[data-in="${inData.guid}"]`
+
+    // in node index
+    if (inData.index) {
+        domQuery += `[data-in-index="${inData.index}"]`
+    }
+
+    // out node index
+    if (outData.index) {
+        domQuery += `[data-out-index="${outData.index}"]`
+    }
+
+    return document.getElementById(outData.guid).querySelector(domQuery)
 }
 
 // remove visual vertex from dom. it wont disconnect the nodes though
@@ -119,7 +150,7 @@ export function createHead(node, label = '', params = []) {
         opBtn.textContent = `${i}`
         leftDiv.append(opBtn)
         const detail = { node, guid: opBtn.id, index: i, type: 'output' }
-        opBtn.onclick = () => opBtn.dispatchEvent(new CustomEvent('audio:select', { bubbles: true, detail }))
+        opBtn.onclick = () => opBtn.dispatchEvent(new CustomEvent('audio:select', { bubbles: true, detail: { payload: () => detail } }))
     }
 
     const heading3 = document.createElement('h2')
@@ -132,7 +163,10 @@ export function createHead(node, label = '', params = []) {
         ipBtn.textContent = `${i}`
         rightDiv.append(ipBtn)
         const detail = { node, guid: ipBtn.id, index: i, type: 'input' }
-        ipBtn.onclick = () => ipBtn.dispatchEvent(new CustomEvent('audio:select', { bubbles: true, detail }))
+        ipBtn.onclick = () => ipBtn.dispatchEvent(new CustomEvent('audio:select', { bubbles: true, detail: { payload: () => detail } }))
+        ipBtn.addEventListener('audio:selected', ({ detail }) => {
+            console.log('selected from parent');
+        }, true)
     }
 
     // parameter section
@@ -150,7 +184,7 @@ export function createHead(node, label = '', params = []) {
         prBtn.textContent = `${param}`
         paramsSection.append(prBtn)
         const detail = { node: node[param], guid: prBtn.id, type: 'param' }
-        prBtn.onclick = () => prBtn.dispatchEvent(new CustomEvent('audio:select', { bubbles: true, detail }))
+        prBtn.onclick = () => prBtn.dispatchEvent(new CustomEvent('audio:select', { bubbles: true, detail: { payload: () => detail } }))
     }
 
     return nodeHead
@@ -278,7 +312,6 @@ export function makeDistortionCurve(amount = 20, n_samples = 256) {
     }
     return curve;
 }
-
 
 // this was taken from the docs https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Advanced_techniques
 // it us used to graph the signal in the analyzer node

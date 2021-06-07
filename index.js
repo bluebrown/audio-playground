@@ -5,7 +5,8 @@ import {
     createHead,
     connectSelected,
     nodeList,
-    removeVertex,
+    getExistingVertex,
+    disconnectNodes,
 } from './lib.js'
 
 
@@ -16,10 +17,10 @@ window.pause = () => ctx.suspend()
 
 let currentOutput = null
 
-// a callback that is fired when a node connector is clicked.
+// event handler that is fired when a node connector is clicked.
 // (the input, putout and params buttons on the ui cards)
-appContext.addEventListener('audio:select', function ({ detail: payload }) {
-    console.log(payload);
+appContext.addEventListener('audio:select', function ({ detail }) {
+    const payload = detail.payload()
     // self imposed rules to be less confusing to the user
     if (!currentOutput) {
         if (payload.type != 'output') {
@@ -36,24 +37,9 @@ appContext.addEventListener('audio:select', function ({ detail: payload }) {
     }
 
     // check if nodes are already connected and if so disconnect
-
-    // if the current output has a vertex with input id of the payload guid
-    // then the connection already exists
-
-    let domQuery = `.vertex[data-in="${payload.guid}"]`
-    if (currentOutput.index) {
-        domQuery += `[data-out-index="${currentOutput.index}"]`
-    }
-    if (payload.index) {
-        domQuery += `[data-in-index="${payload.index}"]`
-    }
-
-    const existing = document.getElementById(currentOutput.guid).querySelector(domQuery)
-
-
+    const existing = getExistingVertex(currentOutput, payload)
     if (existing) {
-        currentOutput.node.disconnect(payload.node)
-        removeVertex(currentOutput.guid, payload.guid, existing.dataset.vertexId)
+        disconnectNodes(currentOutput, payload, existing)
         currentOutput = null
         return
     }
@@ -61,15 +47,11 @@ appContext.addEventListener('audio:select', function ({ detail: payload }) {
     // otherwise connect
     connectSelected(currentOutput, payload)
     currentOutput = null
-}
-
-    , false)
-
-
-const ns = document.getElementById('node-select')
+})
 
 
 // generate all nodes in the list for testing
+const ns = document.getElementById('node-select')
 for (const i in nodeList) {
     const opt = document.createElement('option')
     opt.value = i
