@@ -18,7 +18,8 @@ let currentOutput = null
 
 // a callback that is fired when a node connector is clicked.
 // (the input, putout and params buttons on the ui cards)
-function dispatchSelection(payload) {
+appContext.addEventListener('audio:select', function ({ detail: payload }) {
+    console.log(payload);
     // self imposed rules to be less confusing to the user
     if (!currentOutput) {
         if (payload.type != 'output') {
@@ -62,6 +63,8 @@ function dispatchSelection(payload) {
     currentOutput = null
 }
 
+    , false)
+
 
 const ns = document.getElementById('node-select')
 
@@ -76,24 +79,23 @@ for (const i in nodeList) {
 
 // create audio destination
 const dest = ctx.destination
-const destHead = createHead(dest, 'Destination', [], dispatchSelection)
+const destHead = createHead(dest, 'Destination', [])
 destHead.querySelector('.delete').remove()
 appContext.append(destHead)
 
 window.addNode = () => {
-    appContext.insertBefore(createNodeFromList(ctx, parseInt(ns.value), dispatchSelection)[2], destHead)
+    appContext.insertBefore(createNodeFromList(ctx, parseInt(ns.value))[2], destHead)
 }
-
 
 // create some example nodes and connect them
 {
-    const oscHead = createNodeFromList(ctx, 0, dispatchSelection)[2]
+    const oscHead = createNodeFromList(ctx, 0)[2]
     appContext.insertBefore(oscHead, destHead)
 
-    const [guid, gainNode, gainHead] = createNodeFromList(ctx, 2, dispatchSelection)
+    const [guid, gainNode, gainHead] = createNodeFromList(ctx, 2)
     appContext.insertBefore(gainHead, destHead)
 
-    const anaHead = createNodeFromList(ctx, 8, dispatchSelection)[2]
+    const anaHead = createNodeFromList(ctx, 8,)[2]
     appContext.insertBefore(anaHead, destHead)
 
     oscHead.querySelector('.outputs button').click()

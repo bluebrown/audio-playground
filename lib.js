@@ -57,7 +57,7 @@ export function connectSelected(outSelect, inSelect) {
         const vertexId = guid()
         appendVertexBadge(inEl, colo, inEl.id, inSelect.index, outEl.id, outSelect.index, vertexId)
         appendVertexBadge(outEl, colo, inEl.id, inSelect.index, outEl.id, outSelect.index, vertexId)
-        outEl.dispatchEvent(new CustomEvent('nodesconnected', { bubbles: true, detail: [outEl.id, inEl.id] }))
+        outEl.dispatchEvent(new CustomEvent('audio:connect', { bubbles: true, detail: [outEl.id, inEl.id] }))
     }
     catch (err) {
         console.warn(err.message)
@@ -73,7 +73,7 @@ export function removeVertex(outId, inId, vertexId) {
 }
 
 // create ui head for a given node and attack selection callback to controls
-export function createHead(node, label = '', params = [], dispatchSelection = console.log) {
+export function createHead(node, label = '', params = []) {
     // create new article with and assign guid as id
     const nodeHead = document.createElement('article')
     nodeHead.id = guid()
@@ -118,7 +118,8 @@ export function createHead(node, label = '', params = [], dispatchSelection = co
         opBtn.id = guid()
         opBtn.textContent = `${i}`
         leftDiv.append(opBtn)
-        opBtn.onclick = () => dispatchSelection({ node, guid: opBtn.id, index: i, type: 'output' })
+        const detail = { node, guid: opBtn.id, index: i, type: 'output' }
+        opBtn.onclick = () => opBtn.dispatchEvent(new CustomEvent('audio:select', { bubbles: true, detail }))
     }
 
     const heading3 = document.createElement('h2')
@@ -130,7 +131,8 @@ export function createHead(node, label = '', params = [], dispatchSelection = co
         ipBtn.id = guid()
         ipBtn.textContent = `${i}`
         rightDiv.append(ipBtn)
-        ipBtn.onclick = () => dispatchSelection({ node, guid: ipBtn.id, index: i, type: 'input' })
+        const detail = { node, guid: ipBtn.id, index: i, type: 'input' }
+        ipBtn.onclick = () => ipBtn.dispatchEvent(new CustomEvent('audio:select', { bubbles: true, detail }))
     }
 
     // parameter section
@@ -147,7 +149,8 @@ export function createHead(node, label = '', params = [], dispatchSelection = co
         prBtn.id = guid()
         prBtn.textContent = `${param}`
         paramsSection.append(prBtn)
-        prBtn.onclick = () => dispatchSelection({ node: node[param], guid: prBtn.id, type: 'param' })
+        const detail = { node: node[param], guid: prBtn.id, type: 'param' }
+        prBtn.onclick = () => prBtn.dispatchEvent(new CustomEvent('audio:select', { bubbles: true, detail }))
     }
 
     return nodeHead
@@ -222,11 +225,11 @@ export function saveSmoothValueChange(audioParam, value, time) {
 }
 
 // create a new node and bind ui head head 
-export function createNode(label, ctx, Constructor, options = {}, dispatchSelection = console.log) {
+export function createNode(label, ctx, Constructor, options = {}) {
     // create new node by invoking the constructor
     const node = new Constructor(ctx, options.constructor || {})
     const params = getAudioParams(node)
-    const head = createHead(node, label, params, dispatchSelection)
+    const head = createHead(node, label, params)
 
     // create control section
     const controlSection = createControlSection()
@@ -249,7 +252,7 @@ export function createNode(label, ctx, Constructor, options = {}, dispatchSelect
         const max = pOpts ? pOpts[1] : ap.maxValue
         const step = pOpts ? pOpts[2] : 0.1
         controlSection.append(rangeInput(p, ap.value, min, max, step, ({ target }) => {
-            saveSmoothValueChange(node[p], target.value, ctx.currentTime)
+            saveSmoothValueChange(ap, target.value, ctx.currentTime)
         }))
     }
 
@@ -379,7 +382,7 @@ export const nodeList = [
 ]
 
 // create a node from the list by index
-export function createNodeFromList(ctx, index = 0, dispatchSelection = console.log) {
+export function createNodeFromList(ctx, index = 0) {
     const [label, constructor, options] = nodeList[index]
-    return createNode(label, ctx, constructor, options, dispatchSelection)
+    return createNode(label, ctx, constructor, options)
 }
