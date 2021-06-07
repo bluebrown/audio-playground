@@ -23,11 +23,9 @@ nav {
 }
 
 #app {
-    display: flex;
-    flex-wrap: wrap;
     padding: 24px;
     padding-top: 16px;
-    justify-content: center;
+    position: relative;
 }
 
 .node-head {
@@ -35,11 +33,11 @@ nav {
     border-radius: 3px;
     padding: 16px;
     background: white;
-    max-width: 280px;
-    margin-bottom: 16px;
-    flex: 1;
-    margin: 8px;
     cursor: grab;
+    position: absolute;
+    top: 5;
+    left: 5;
+    overflow: hidden;
 }
 
 .node-head:active {

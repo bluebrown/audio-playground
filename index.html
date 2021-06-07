@@ -11,9 +11,11 @@
         integrity="sha512-sqIVMkf5f8XGYI/UZYGs7wODxlUeoj9JknataPfUwtvrSKWMHrMXGZ7Evb6nabFYJQG15vFFyALe6r0nWCD1Ug=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
 
+
     <!-- momma, forgive me for this -->
-    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="vendor/jquery/external/jquery/jquery.js"></script>
+    <link rel="stylesheet" href="vendor/jquery/jquery-ui.min.css">
+    <script src="vendor/jquery/jquery-ui.min.js"></script>
 
     <!-- main styles -->
     <link rel="stylesheet" href="style.css">
@@ -39,10 +41,10 @@
     <script>
         // use jQuery to add drag and drop 
         $(() => {
-            $(".node-head").draggable()
+            $(".node-head").resizable().draggable()
             window.addDraggableNode = function (event) {
                 window.addNode()
-                $(".node-head").draggable()
+                $(".node-head").resizable().draggable()
             }
         });
     </script>

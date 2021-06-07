@@ -395,6 +395,42 @@ export const biFilterOpts = {
 }
 
 
+const pannerOpts = {
+    select: [
+        {
+            label: 'panningModel',
+            items: [
+                'equalpower',
+                'HRTF',
+            ]
+        },
+        {
+            label: 'distanceModel',
+            items: [
+                'linear',
+                'inverse',
+                'exponential',
+            ]
+        }
+    ],
+    doubles: [
+        ['coneInnerAngle', 0, 0, 360],
+        ['coneOuterAngle', 0, 0, 360],
+        ['coneOuterGain', 0, 0, 1],
+        ['maxDistance', 1, 1, 1000],
+        ['refDistance', 0, 0, 1000],
+        ['rolloffFactor', 0, 0, 1000],
+    ],
+    callback(ctx, node, head) {
+        console.log(this.doubles)
+        const controls = head.querySelector('.controls')
+        for (const [dbl, val, min, max] of this.doubles) {
+            controls.append(rangeInput(dbl, val, min, max, 0.1, ({ target: { value } }) => node[dbl] = parseFloat(value)))
+        }
+    },
+
+}
+
 // this list is work in progress, many components have missing functionality on the ui
 
 // node list from which nodes with defaults settings and ui head can be generates
@@ -425,7 +461,7 @@ export const nodeList = [
     // ['IIRFilterNode', IIRFilterNode, {}], //  Failed to construct 'IIRFilterNode': required member feedback is undefined.
     ['OscillatorNode', OscillatorNode, { select: lfoOpts.select, params: { frequency: [0, 1000, 1], detune: [-25, 25, 1] } }],
     ['LfoNode', OscillatorNode, lfoOpts], // custom
-    ['PannerNode', PannerNode, {}],
+    ['PannerNode', PannerNode, pannerOpts],
     // ['PeriodicWave', PeriodicWave, {}], needs buffer
     ['StereoPannerNode', StereoPannerNode, {}],
     ['WaveShaperNode', WaveShaperNode, waveShaperOpts],
@@ -436,17 +472,3 @@ export function createNodeFromList(ctx, index = 0) {
     const [label, constructor, options] = nodeList[index]
     return createNode(label, ctx, constructor, options)
 }
-
-
-
-/*
-panner.panningModel = 'HRTF';
-panner.distanceModel = 'inverse';
-panner.refDistance = 1;
-panner.maxDistance = 10000;
-panner.rolloffFactor = 1;
-panner.coneInnerAngle = 360;
-panner.coneOuterAngle = 0;
-panner.coneOuterGain = 0;
-
-*/
